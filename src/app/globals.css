@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: var(--font-instrument-serif), ui-serif, Georgia, serif;
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+
+  /* Monochrome — greyer page, light surfaces, charcoal accents */
+  --color-page: #c8c8cf;
+  --color-cream-50: #f4f4f5;
+  --color-cream-100: #e4e4e7;
+  --color-cream-200: #d4d4d8;
+  --color-cream-300: #a1a1aa;
+  --color-rose-700: #52525b;
+  --color-rose-800: #3f3f46;
+  --color-rose-900: #18181b;
+  --color-mauve-600: #71717a;
+  --color-gold-500: #9ca3af;
+  --color-gold-600: #6b7280;
+  --color-ink: #0a0a0b;
+}
+
+@layer base {
+  html {
+    @apply scroll-smooth antialiased;
+  }
+  body {
+    @apply bg-page text-ink font-sans;
+  }
+}

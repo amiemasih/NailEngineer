@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  enrollments     Enrollment[]
+  lessonProgress  LessonProgress[]
+}
+
+model Course {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  title        String
+  subtitle     String?
+  description  String
+  level        String
+  durationMins Int
+  order        Int      @default(0)
+
+  modules     CourseModule[]
+  enrollments Enrollment[]
+}
+
+model CourseModule {
+  id          String @id @default(cuid())
+  courseId    String
+  title       String
+  summary     String
+  order       Int    @default(0)
+
+  course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons Lesson[]
+
+  @@index([courseId])
+}
+
+model Lesson {
+  id           String @id @default(cuid())
+  moduleId     String
+  title        String
+  contentMd    String
+  videoUrl     String?
+  durationMins Int    @default(10)
+  order        Int    @default(0)
+
+  module   CourseModule     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  progress LessonProgress[]
+
+  @@index([moduleId])
+}
+
+model Enrollment {
+  id         String   @id @default(cuid())
+  userId     String
+  courseId   String
+  enrolledAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([userId])
+}
+
+model LessonProgress {
+  id          String    @id @default(cuid())
+  userId      String
+  lessonId    String
+  completedAt DateTime?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@index([userId])
+}
+
+enum AvailabilityState {
+  FREE
+  LIMITED
+  UNAVAILABLE
+}
+
+/// Jayden-defined windows (include travel/buffer by ending availability earlier than hard commitments).
+model AvailabilityBlock {
+  id        String            @id @default(cuid())
+  startAt   DateTime
+  endAt     DateTime
+  state     AvailabilityState
+  note      String?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@index([startAt, endAt])
+}
+
+model Booking {
+  id          String   @id @default(cuid())
+  startAt     DateTime
+  endAt       DateTime
+  serviceId   String
+  serviceName String
+  clientName  String
+  clientEmail String
+  clientPhone String?
+  status      String   @default("confirmed")
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  @@index([startAt, endAt])
+  @@index([status])
+}
