@@ -44,7 +44,19 @@ export default function HomePage() {
           <p className="mt-5 max-w-xl font-sans text-base font-normal leading-relaxed text-zinc-200 sm:text-lg">
             Empowering your nail-care journey
           </p>
-          <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
+          <div className="mt-12 flex flex-col items-center gap-4">
+            <Link
+              href="/training-data"
+              className="inline-flex min-w-[9.5rem] justify-center rounded-full bg-zinc-50 px-10 py-3.5 text-sm font-semibold text-zinc-950 shadow-sm transition-colors hover:bg-white"
+            >
+              Upload your nail photos
+            </Link>
+            <Link
+              href="/ai-demo"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-zinc-100 underline-offset-4 transition-colors hover:text-white hover:underline"
+            >
+              See how our AI works →
+            </Link>
             <Link
               href="/book"
               className="inline-flex min-w-[9.5rem] justify-center rounded-full bg-zinc-50 px-10 py-3.5 text-sm font-semibold text-zinc-950 shadow-sm transition-colors hover:bg-white"
