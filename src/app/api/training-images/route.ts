@@ -1,47 +1,27 @@
 import { NextResponse } from "next/server";
 import { getTrainingStep } from "@/lib/training-steps";
 import {
-  listTrainingImages,
   storageConfigured,
   uploadTrainingImage,
   MAX_IMAGE_BYTES,
 } from "@/lib/supabase-storage";
+import { notifyTrainingSubmission } from "@/lib/notify";
 
 // Service-role Supabase + FormData parsing need the Node.js runtime.
 export const runtime = "nodejs";
 
-// Public, unauthenticated endpoint: the audience uploads reference photos here
+// Public, unauthenticated endpoint: the audience submits reference photos here
 // without signing in. Uploads are validated to images only and capped at
-// MAX_IMAGE_BYTES; listing only returns short-lived server-signed URLs.
+// MAX_IMAGE_BYTES. There is deliberately NO listing endpoint — submitted
+// images are only viewable through the private Supabase storage bucket, so the
+// public interface never exposes what others have uploaded.
 
-/** GET /api/training-images?step=<id>: list a step's uploaded images. */
-export async function GET(req: Request) {
-  if (!storageConfigured()) {
-    return NextResponse.json(
-      { error: "Storage is not configured yet.", configured: false, images: [] },
-      { status: 200 },
-    );
-  }
-
-  const stepId = new URL(req.url).searchParams.get("step");
-  const step = stepId ? getTrainingStep(stepId) : null;
-  if (!step) {
-    return NextResponse.json({ error: "Unknown step." }, { status: 400 });
-  }
-
-  try {
-    const images = await listTrainingImages(step.folder);
-    return NextResponse.json({ configured: true, step: step.id, images });
-  } catch (err) {
-    console.error("training-images list failed", err);
-    return NextResponse.json(
-      { error: "Could not list images." },
-      { status: 500 },
-    );
-  }
+/** GET /api/training-images: report only whether storage is configured. */
+export async function GET() {
+  return NextResponse.json({ configured: storageConfigured() });
 }
 
-/** POST /api/training-images: multipart upload of one or more images. */
+/** POST /api/training-images: multipart submission of one or more images. */
 export async function POST(req: Request) {
   if (!storageConfigured()) {
     return NextResponse.json(
@@ -103,9 +83,18 @@ export async function POST(req: Request) {
     }
   }
 
+  // Best-effort notification — never blocks or fails the submission.
+  if (uploaded.length > 0) {
+    await notifyTrainingSubmission({
+      stepId: step.id,
+      stepTitle: step.title,
+      uploadedCount: uploaded.length,
+    });
+  }
+
   const status = uploaded.length === 0 ? 502 : 200;
   return NextResponse.json(
-    { step: step.id, uploaded, failed },
+    { step: step.id, praise: step.praise, uploaded, failed },
     { status },
   );
 }

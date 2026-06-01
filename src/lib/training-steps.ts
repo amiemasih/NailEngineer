@@ -22,6 +22,8 @@ export type TrainingStep = {
   optional?: boolean;
   /** Guidance from the labeling spec, shown to the tech. */
   hint: string;
+  /** Shown to the tech after a successful submission of this step. */
+  praise: string;
 };
 
 export const TRAINING_STEPS: TrainingStep[] = [
@@ -31,6 +33,7 @@ export const TRAINING_STEPS: TrainingStep[] = [
     number: "1",
     title: "Before",
     hint: "The starting nail before any work: existing polish or a bare nail.",
+    praise: "prep looks amazing!",
   },
   {
     id: "step-2-polish-removal",
@@ -39,6 +42,7 @@ export const TRAINING_STEPS: TrainingStep[] = [
     title: "Polish Removal",
     optional: true,
     hint: "Mid polish removal. Optional, only when there was polish to take off.",
+    praise: "the polish removal shots look great!",
   },
   {
     id: "step-3-push-back-cuticles",
@@ -46,6 +50,7 @@ export const TRAINING_STEPS: TrainingStep[] = [
     number: "3",
     title: "Push Back Cuticles",
     hint: "Cuticles pushed back, first step of cuticle work.",
+    praise: "that cuticle work looks amazing!",
   },
   {
     id: "step-4-clean-cuticle",
@@ -53,6 +58,7 @@ export const TRAINING_STEPS: TrainingStep[] = [
     number: "4",
     title: "Clean Cuticle",
     hint: "Cuticle cleaned, no trim yet (ball bit / cleanup in frame is fine).",
+    praise: "those clean cuticles look amazing!",
   },
   {
     id: "step-5-6-trim-buffed-nails",
@@ -60,6 +66,7 @@ export const TRAINING_STEPS: TrainingStep[] = [
     number: "5 / 6",
     title: "Trim Cuticles & / or Buffed Nails",
     hint: "Cuticles trimmed and/or the nail buffed and prepped.",
+    praise: "the trim & buff shots look amazing!",
   },
 ];
 
