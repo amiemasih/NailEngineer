@@ -165,33 +165,3 @@ export async function listTrainingImages(
     };
   });
 }
-
-/** List just the object names/paths in a step's folder (no signed URLs). */
-export async function listTrainingImagePaths(
-  folder: string,
-  limit = 1000,
-): Promise<{ name: string; path: string }[]> {
-  const client = getClient();
-  await ensureBucket(client);
-
-  const { data, error } = await client.storage
-    .from(TRAINING_BUCKET)
-    .list(folder, { limit, sortBy: { column: "name", order: "asc" } });
-  if (error) throw error;
-
-  return (data ?? [])
-    .filter((o) => o.id)
-    .map((f) => ({ name: f.name, path: `${folder}/${f.name}` }));
-}
-
-/** Download a single object's raw bytes from the bucket. */
-export async function downloadTrainingImage(
-  path: string,
-): Promise<Uint8Array | null> {
-  const client = getClient();
-  const { data, error } = await client.storage
-    .from(TRAINING_BUCKET)
-    .download(path);
-  if (error || !data) return null;
-  return new Uint8Array(await data.arrayBuffer());
-}
