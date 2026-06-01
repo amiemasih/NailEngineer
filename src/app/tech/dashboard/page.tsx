@@ -39,6 +39,12 @@ export default async function TechDashboardPage() {
         >
           Manage availability
         </Link>
+        <Link
+          href="/tech/training-images"
+          className="inline-flex rounded-full border border-cream-300 bg-white px-6 py-3 text-sm font-semibold text-rose-900 hover:border-rose-300 transition-colors"
+        >
+          Submitted training images
+        </Link>
         <form action={techLogout}>
           <button
             type="submit"
