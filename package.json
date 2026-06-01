@@ -19,6 +19,7 @@
     "@supabase/supabase-js": "^2.106.2",
     "bcryptjs": "^3.0.2",
     "jose": "^6.0.10",
+    "jszip": "^3.10.1",
     "next": "15.2.9",
     "react": "19.0.4",
     "react-dom": "19.0.4",

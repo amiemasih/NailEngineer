@@ -112,13 +112,23 @@ export function TrainingImageGallery() {
               </span>
             )}
           </h2>
-          <button
-            type="button"
-            onClick={() => loadImages(activeStep)}
-            className="text-sm font-semibold text-mauve-600 hover:text-rose-900 hover:underline"
-          >
-            Refresh
-          </button>
+          <div className="flex items-center gap-4">
+            {images.length > 0 && (
+              <a
+                href={`/api/tech/training-images/download?step=${encodeURIComponent(activeStep.id)}`}
+                className="inline-flex rounded-full bg-rose-900 px-5 py-2 text-sm font-semibold text-cream-50 hover:bg-rose-800 transition-colors"
+              >
+                Download all ({images.length})
+              </a>
+            )}
+            <button
+              type="button"
+              onClick={() => loadImages(activeStep)}
+              className="text-sm font-semibold text-mauve-600 hover:text-rose-900 hover:underline"
+            >
+              Refresh
+            </button>
+          </div>
         </div>
 
         {error && (
