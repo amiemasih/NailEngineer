@@ -4,7 +4,7 @@ import { TechAvailabilityEditor } from "@/components/TechAvailabilityEditor";
 import { PAGE_TITLE_CLASS } from "@/lib/pageTitle";
 
 export const metadata: Metadata = {
-  title: "Availability — Nail Engineer",
+  title: "Availability, Nail Engineer",
   robots: { index: false, follow: false },
 };
 
@@ -19,7 +19,7 @@ export default function TechAvailabilityPage() {
       </Link>
       <h1 className={`mt-4 ${PAGE_TITLE_CLASS}`}>Biweekly availability</h1>
       <p className="mt-3 text-mauve-600 leading-relaxed max-w-2xl">
-        Publish the furthest horizon you actually know—usually about two weeks for student
+        Publish the furthest horizon you actually know-usually about two weeks for student
         schedules. Everything you save here filters the public{" "}
         <Link href="/book" className="font-semibold text-rose-800 hover:underline">
           Book Online

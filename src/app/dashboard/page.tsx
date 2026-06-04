@@ -47,7 +47,7 @@ export default async function DashboardPage() {
     <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
       <h1 className={PAGE_TITLE_CLASS}>Your dashboard</h1>
       <p className="mt-2 text-mauve-600">
-        Welcome back{session.email ? ` — ${session.email}` : ""}. Pick up where you left off.
+        Welcome back{session.email ? `, ${session.email}` : ""}. Pick up where you left off.
       </p>
 
       {rows.length === 0 ? (

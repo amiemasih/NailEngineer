@@ -20,7 +20,7 @@ const textSize = {
 };
 
 /**
- * Primary brand lockup — same mark + wordmark everywhere for recognizability
+ * Primary brand lockup, same mark + wordmark everywhere for recognizability
  * when content is reshared without captions (see also /public/brand/).
  */
 export function Logo({

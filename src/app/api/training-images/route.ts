@@ -6,13 +6,24 @@ import {
   MAX_IMAGE_BYTES,
 } from "@/lib/supabase-storage";
 import { notifyTrainingSubmission } from "@/lib/notify";
+import { prisma } from "@/lib/prisma";
+
+/** Normalise the submitter identity fields from the form. */
+function readSubmitter(form: FormData): { name: string; type: string } | null {
+  const rawName = form.get("submitterName");
+  const name = typeof rawName === "string" ? rawName.trim() : "";
+  if (!name) return null;
+  const rawType = form.get("submitterType");
+  const type = rawType === "school" ? "school" : "individual";
+  return { name: name.slice(0, 160), type };
+}
 
 // Service-role Supabase + FormData parsing need the Node.js runtime.
 export const runtime = "nodejs";
 
 // Public, unauthenticated endpoint: the audience submits reference photos here
 // without signing in. Uploads are validated to images only and capped at
-// MAX_IMAGE_BYTES. There is deliberately NO listing endpoint — submitted
+// MAX_IMAGE_BYTES. There is deliberately NO listing endpoint, submitted
 // images are only viewable through the private Supabase storage bucket, so the
 // public interface never exposes what others have uploaded.
 
@@ -49,6 +60,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Select a valid step." }, { status: 400 });
   }
 
+  const submitter = readSubmitter(form);
+  if (!submitter) {
+    return NextResponse.json(
+      { error: "Enter your nail school or tech/salon name before submitting." },
+      { status: 400 },
+    );
+  }
+
   const files = form
     .getAll("files")
     .filter((f): f is File => f instanceof File && f.size > 0);
@@ -83,12 +102,34 @@ export async function POST(req: Request) {
     }
   }
 
-  // Best-effort notification — never blocks or fails the submission.
+  // Persist the submission so it's attributed and tracked in the database.
+  // Best-effort: a DB hiccup must not lose a successful upload.
+  if (uploaded.length > 0) {
+    try {
+      await prisma.trainingSubmission.create({
+        data: {
+          submitterName: submitter.name,
+          submitterType: submitter.type,
+          stepId: step.id,
+          stepTitle: step.title,
+          images: {
+            create: uploaded.map((u) => ({ path: u.path, name: u.name })),
+          },
+        },
+      });
+    } catch (err) {
+      console.error("training submission record failed", err);
+    }
+  }
+
+  // Best-effort notification, never blocks or fails the submission.
   if (uploaded.length > 0) {
     await notifyTrainingSubmission({
       stepId: step.id,
       stepTitle: step.title,
       uploadedCount: uploaded.length,
+      submitterName: submitter.name,
+      submitterType: submitter.type,
     });
   }
 

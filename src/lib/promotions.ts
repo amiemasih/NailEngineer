@@ -4,7 +4,7 @@ export type Promotion = {
   /** Short headline, e.g. "10% off" or "$10 off gel" */
   offerLabel: string;
   body: string;
-  /** Who qualifies — student ID, org membership, etc. */
+  /** Who qualifies, student ID, org membership, etc. */
   eligibility: string;
   validFrom: string;
   validTo: string;
@@ -20,7 +20,7 @@ export type Promotion = {
 
 /**
  * Time-bound and audience-specific offers.
- * Update dates, `active`, or copy here — the Services page reads this on every request
+ * Update dates, `active`, or copy here, the Services page reads this on every request
  * so windows and eligibility stay accurate without redeploying layout.
  */
 export const PROMOTIONS: Promotion[] = [
@@ -41,7 +41,7 @@ export const PROMOTIONS: Promotion[] = [
     id: "d9-founders-2026",
     title: "D9 Founder’s Days",
     offerLabel: "Promotional menu pricing",
-    body: "Limited window pricing on full-design nail art sessions and structured gel—see booking notes for the exact Founder’s Days menu.",
+    body: "Limited window pricing on full-design nail art sessions and structured gel-see booking notes for the exact Founder’s Days menu.",
     eligibility: "Open to invited guests and D9 community during the published event window.",
     validFrom: "2026-09-01T05:00:00.000Z",
     validTo: "2026-09-07T23:59:59.999Z",

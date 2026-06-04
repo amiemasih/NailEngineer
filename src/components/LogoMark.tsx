@@ -9,7 +9,7 @@ const SPOKE_DEG = [0, 60, 120, 180, 240, 300] as const;
 
 /**
  * Engineer symbol: minimal cog (hub + six spokes) + nail brush crossing through.
- * Line icon — precision, systems, craft. Same geometry in /public/brand/ and favicon.
+ * Line icon, precision, systems, craft. Same geometry in /public/brand/ and favicon.
  */
 export function LogoMark({
   className = "",
@@ -58,7 +58,7 @@ export function LogoMark({
           />
         );
       })}
-      {/* Brush handle — crosses the gear */}
+      {/* Brush handle, crosses the gear */}
       <line
         x1="9.25"
         y1="24.25"
@@ -68,7 +68,7 @@ export function LogoMark({
         strokeWidth={sw}
         strokeLinecap="round"
       />
-      {/* Bristles — short strokes perpendicular to handle */}
+      {/* Bristles, short strokes perpendicular to handle */}
       <line
         x1="20.35"
         y1="6.15"

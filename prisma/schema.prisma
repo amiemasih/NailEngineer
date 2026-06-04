@@ -116,8 +116,80 @@ model Booking {
   clientPhone String?
   status      String   @default("confirmed")
   notes       String?
+  /// Google Calendar event id, when this booking was pushed to Jayden's calendar.
+  googleEventId String?
   createdAt   DateTime @default(now())
 
   @@index([startAt, endAt])
   @@index([status])
+}
+
+/// Stored Google Calendar OAuth credentials for Jayden's account. Single row
+/// (id is fixed) — the app pushes bookings to and reads busy time from this
+/// account. Refresh token persists; access token is cached until it expires.
+model GoogleCalendarAccount {
+  id           String    @id @default("default")
+  email        String?
+  calendarId   String    @default("primary")
+  refreshToken String
+  accessToken  String?
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+/// One submission of training photos for a single step, attributed to the
+/// nail school or individual tech/salon who sent them.
+model TrainingSubmission {
+  id            String   @id @default(cuid())
+  submitterName String
+  submitterType String   // "school" | "individual"
+  stepId        String
+  stepTitle     String
+  createdAt     DateTime @default(now())
+
+  images TrainingImageFile[]
+
+  @@index([createdAt])
+}
+
+model TrainingImageFile {
+  id           String @id @default(cuid())
+  submissionId String
+  path         String @unique // Supabase Storage path
+  name         String
+
+  submission TrainingSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@index([submissionId])
+}
+
+/// A report that nails popped off, with which fingers and when. `leftFingers`
+/// and `rightFingers` hold a JSON-encoded string array (e.g. ["thumb","index"])
+/// so the schema stays portable between SQLite (local) and Postgres (prod).
+model PopOffReport {
+  id            String    @id @default(cuid())
+  submitterName String
+  submitterType String
+  leftFingers   String    @default("[]")
+  rightFingers  String    @default("[]")
+  nailsDoneDate DateTime?
+  poppedOffDate DateTime?
+  notes         String?
+  createdAt     DateTime  @default(now())
+
+  images PopOffImageFile[]
+
+  @@index([createdAt])
+}
+
+model PopOffImageFile {
+  id       String @id @default(cuid())
+  reportId String
+  path     String @unique
+  name     String
+
+  report PopOffReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([reportId])
 }

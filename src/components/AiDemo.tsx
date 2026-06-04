@@ -5,7 +5,14 @@ import { DEMO_SAMPLES, type DemoSample, type NailVariant } from "@/lib/ai-demo-s
 
 type Phase = "uploading" | "analyzing" | "done";
 
-/** A drawn nail "photo" — no external assets, so the demo always renders. */
+/** Solid chip tones keyed to confidence: red (low) -> amber (mid) -> green (high). */
+function confTone(c: number): { chip: string; soft: string } {
+  if (c >= 80) return { chip: "bg-green-600/90", soft: "bg-green-100 text-green-800" };
+  if (c >= 60) return { chip: "bg-amber-400/70", soft: "bg-amber-100/70 text-amber-800/80" };
+  return { chip: "bg-red-600/90", soft: "bg-red-100 text-red-800" };
+}
+
+/** A drawn nail "photo", no external assets, so the demo always renders. */
 function NailPhoto({ variant }: { variant: NailVariant }) {
   return (
     <svg viewBox="0 0 200 240" className="h-full w-full" role="img" aria-label="Sample nail photo">
@@ -60,12 +67,12 @@ function NailPhoto({ variant }: { variant: NailVariant }) {
 function ScanOverlay() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]">
-      <div className="ne-scan-line absolute inset-x-0 h-[3px] bg-gradient-to-r from-transparent via-rose-400 to-transparent shadow-[0_0_18px_4px_rgba(244,114,182,0.55)]" />
+      <div className="ne-scan-line absolute inset-x-0 h-[3px] bg-gradient-to-r from-transparent via-amber-300/50 to-transparent shadow-[0_0_16px_3px_rgba(214,178,110,0.25)]" />
       <div
-        className="absolute inset-0 opacity-30"
+        className="absolute inset-0 opacity-20"
         style={{
           backgroundImage:
-            "linear-gradient(rgba(244,114,182,0.25) 1px, transparent 1px), linear-gradient(90deg, rgba(244,114,182,0.25) 1px, transparent 1px)",
+            "linear-gradient(rgba(180,150,90,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(180,150,90,0.15) 1px, transparent 1px)",
           backgroundSize: "22px 22px",
         }}
       />
@@ -134,11 +141,11 @@ export function AiDemo() {
               onClick={() => run(s)}
               className={`flex items-center gap-2 rounded-full border px-3 py-2 text-sm font-semibold transition-colors ${
                 isActive
-                  ? "border-rose-900 bg-rose-900 text-cream-50"
-                  : "border-cream-300 bg-white text-rose-900 hover:border-rose-300"
+                  ? "border-amber-300/70 bg-amber-200/60 text-amber-900/90 shadow-sm"
+                  : "border-stone-300 bg-white/70 text-stone-700 hover:border-amber-300/70"
               }`}
             >
-              <span className="h-7 w-7 overflow-hidden rounded-full border border-cream-200 bg-cream-50">
+              <span className="h-7 w-7 overflow-hidden rounded-full border border-stone-200 bg-[#fbf8f3]">
                 <NailPhoto variant={s.variant} />
               </span>
               {s.caption}
@@ -150,7 +157,7 @@ export function AiDemo() {
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,420px)_1fr]">
         {/* photo + scan */}
         <div>
-          <div className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-cream-200 bg-gradient-to-br from-cream-100 to-cream-50">
+          <div className="relative aspect-[4/5] overflow-hidden rounded-sm border border-stone-200 bg-[#fbf8f3] shadow-[0_18px_45px_-22px_rgba(68,64,60,0.5)]">
             <div className="absolute inset-0 flex items-center justify-center p-8">
               <NailPhoto variant={active.variant} />
             </div>
@@ -158,12 +165,12 @@ export function AiDemo() {
             {phase === "analyzing" && <ScanOverlay />}
 
             {/* filename chip */}
-            <span className="absolute left-3 top-3 rounded-full bg-rose-950/80 px-3 py-1 text-xs font-medium text-cream-50">
+            <span className="absolute left-3 top-3 rounded-full bg-stone-900/80 px-3 py-1 text-xs font-medium text-stone-50">
               {active.filename}
             </span>
 
             {/* status chip */}
-            <span className="absolute right-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-rose-900">
+            <span className="absolute right-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-amber-700/70">
               {phase === "uploading"
                 ? `Uploading ${progress}%`
                 : phase === "analyzing"
@@ -173,9 +180,9 @@ export function AiDemo() {
 
             {/* upload progress bar */}
             {phase === "uploading" && (
-              <div className="absolute inset-x-0 bottom-0 h-1.5 bg-rose-950/10">
+              <div className="absolute inset-x-0 bottom-0 h-1.5 bg-stone-900/10">
                 <div
-                  className="h-full bg-rose-500 transition-all duration-200 ease-out"
+                  className="h-full bg-amber-400/60 transition-all duration-200 ease-out"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -185,22 +192,23 @@ export function AiDemo() {
           <button
             type="button"
             onClick={() => run(active)}
-            className="mt-3 inline-flex w-full justify-center rounded-full border border-cream-300 bg-white px-5 py-2.5 text-sm font-semibold text-rose-900 transition-colors hover:border-rose-300"
+            className="mt-4 inline-flex w-full justify-center rounded-full border border-stone-300 bg-white/70 px-5 py-2.5 text-sm font-semibold text-stone-700 transition-colors hover:border-amber-400 hover:text-stone-900"
           >
             ↻ Re-run analysis
           </button>
         </div>
 
         {/* feedback */}
-        <div className="rounded-2xl border border-cream-200 bg-white p-6">
+        <div className="relative rounded-sm border border-stone-200 bg-[#fdfbf7] p-6 shadow-[0_18px_45px_-22px_rgba(68,64,60,0.5)]">
+          <div className="relative z-[1]">
           {phase !== "done" ? (
             <div className="flex h-full min-h-[280px] flex-col items-center justify-center text-center">
               <div className="flex gap-1.5">
-                <span className="h-2.5 w-2.5 animate-bounce rounded-full bg-rose-300 [animation-delay:-0.2s]" />
-                <span className="h-2.5 w-2.5 animate-bounce rounded-full bg-rose-400 [animation-delay:-0.1s]" />
-                <span className="h-2.5 w-2.5 animate-bounce rounded-full bg-rose-500" />
+                <span className="h-2.5 w-2.5 animate-bounce rounded-full bg-amber-300/55 [animation-delay:-0.2s]" />
+                <span className="h-2.5 w-2.5 animate-bounce rounded-full bg-amber-300/65 [animation-delay:-0.1s]" />
+                <span className="h-2.5 w-2.5 animate-bounce rounded-full bg-amber-400/65" />
               </div>
-              <p className="mt-4 text-sm font-medium text-mauve-600">
+              <p className="mt-4 text-sm font-medium text-stone-600">
                 {phase === "uploading"
                   ? "Sending your photo securely…"
                   : "Reading the nail and matching it to a service stage…"}
@@ -209,34 +217,60 @@ export function AiDemo() {
           ) : (
             <div className="ne-fade" key={active.id}>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-rose-900 px-3 py-1 text-xs font-semibold text-cream-50">
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-semibold text-white ${confTone(a.confidence).chip}`}
+                >
                   Detected · Step {a.stageNumber}: {a.stageTitle}
                 </span>
-                <span className="rounded-full bg-cream-200 px-3 py-1 text-xs font-semibold text-rose-900">
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${confTone(a.confidence).soft}`}
+                >
                   {a.confidence}% confidence
                 </span>
               </div>
 
-              {/* confidence meter */}
-              <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-cream-200">
+              {/* confidence scale: the full red->amber->green bar is always shown,
+                  with a pointer marking where this reading lands (e.g. 93 -> 93%). */}
+              <div className="relative mt-4 pt-7">
+                {/* pointer + label at the confidence position */}
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-rose-400 to-rose-600"
-                  style={{ width: `${a.confidence}%` }}
+                  className="absolute top-0 flex -translate-x-1/2 flex-col items-center transition-all duration-500 ease-out"
+                  style={{ left: `${a.confidence}%` }}
+                >
+                  <span className="rounded bg-stone-900 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-white shadow-sm">
+                    {a.confidence}%
+                  </span>
+                  <span
+                    className="h-0 w-0 border-x-[5px] border-t-[6px] border-x-transparent border-t-stone-900"
+                    aria-hidden
+                  />
+                </div>
+                {/* full 0-100 scale */}
+                <div
+                  className="h-2.5 w-full rounded-full"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(90deg, #dc2626 0%, #f59e0b 55%, #16a34a 100%)",
+                  }}
                 />
+                <div className="mt-1 flex justify-between text-[10px] font-medium text-stone-400">
+                  <span>Low</span>
+                  <span>High</span>
+                </div>
               </div>
 
-              <p className="mt-4 text-rose-900">
-                <span className="font-semibold">Assessment: </span>
+              <p className="mt-4 text-stone-800">
+                <span className="font-semibold text-stone-900">Assessment: </span>
                 {a.condition}
               </p>
 
-              <h3 className="mt-5 text-xs font-semibold uppercase tracking-wider text-gold-600">
+              <h3 className="mt-5 text-xs font-semibold uppercase tracking-wider text-amber-700/65">
                 What the AI sees
               </h3>
               <ul className="mt-2 space-y-1.5">
                 {a.observations.map((o) => (
-                  <li key={o} className="flex gap-2 text-sm text-mauve-700">
-                    <span aria-hidden className="mt-0.5 text-rose-400">
+                  <li key={o} className="flex gap-2 text-sm text-stone-700">
+                    <span aria-hidden className="mt-0.5 text-amber-500/55">
                       ✓
                     </span>
                     {o}
@@ -244,31 +278,27 @@ export function AiDemo() {
                 ))}
               </ul>
 
-              <div className="mt-5 rounded-xl border border-rose-200 bg-rose-50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wider text-rose-700">
+              <div className="mt-5 rounded-sm border border-amber-300/45 bg-amber-100/40 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-amber-700/70">
                   Recommended next step
                 </p>
-                <p className="mt-1 font-display text-lg font-bold text-rose-900">
+                <p className="mt-1 font-display text-lg font-bold text-stone-900">
                   Step {a.nextStepNumber}: {a.nextStepTitle}
                 </p>
-                <p className="mt-1.5 text-sm leading-relaxed text-rose-900/90">{a.advice}</p>
+                <p className="mt-1.5 text-sm leading-relaxed text-stone-700">{a.advice}</p>
               </div>
 
               {a.tip && (
-                <p className="mt-3 text-sm text-mauve-600">
-                  <span className="font-semibold text-rose-900">Pro tip: </span>
+                <p className="mt-3 text-sm text-stone-700">
+                  <span className="font-semibold text-amber-700/70">Pro tip: </span>
                   {a.tip}
                 </p>
               )}
             </div>
           )}
+          </div>
         </div>
       </div>
-
-      <p className="mt-6 text-xs text-mauve-500">
-        Demo only. Sample photos are illustrations and the feedback is scripted to show how the
-        finished assistant will guide each step.
-      </p>
     </div>
   );
 }

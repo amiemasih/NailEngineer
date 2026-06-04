@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { computeAvailableSlots, slotViolatesRules } from "@/lib/booking-engine";
 import { getServiceById } from "@/lib/services-catalog";
-import { syncBookingToGoogleIfConfigured } from "@/lib/google-calendar";
+import { getBusyIntervals, pushBookingEvent } from "@/lib/google-calendar";
 
 type Body = {
   serviceId?: string;
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
   const rangeStart = new Date(startAt.getTime() - padMs);
   const rangeEnd = new Date(endAt.getTime() + padMs);
 
-  const [blocks, bookings] = await Promise.all([
+  const [dbBlocks, bookings, googleBusy] = await Promise.all([
     prisma.availabilityBlock.findMany({
       where: { endAt: { gt: rangeStart }, startAt: { lt: rangeEnd } },
       orderBy: { startAt: "asc" },
@@ -60,7 +60,13 @@ export async function POST(req: Request) {
         startAt: { lt: rangeEnd },
       },
     }),
+    // Jayden's external Google events count as UNAVAILABLE (no-op if not connected).
+    getBusyIntervals(rangeStart, rangeEnd),
   ]);
+
+  // Google busy intervals join manual blocks as UNAVAILABLE windows. They carry
+  // no id/note, so the booking engine treats them purely as busy time.
+  const blocks = [...dbBlocks, ...googleBusy];
 
   const startMs = startAt.getTime();
   const endMs = endAt.getTime();
@@ -125,14 +131,23 @@ export async function POST(req: Request) {
       },
     });
 
-    void syncBookingToGoogleIfConfigured({
+    // Mirror the booking onto Jayden's Google Calendar (no-op if not connected),
+    // and persist the event id so a later cancellation can remove it.
+    const sync = await pushBookingEvent({
       id: booking.id,
       startAt: booking.startAt,
       endAt: booking.endAt,
       serviceName: booking.serviceName,
       clientName: booking.clientName,
       clientEmail: booking.clientEmail,
+      clientPhone: booking.clientPhone,
     });
+    if (sync.ok && sync.eventId) {
+      await prisma.booking.update({
+        where: { id: booking.id },
+        data: { googleEventId: sync.eventId },
+      });
+    }
 
     return NextResponse.json({
       ok: true,

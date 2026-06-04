@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import JSZip from "jszip";
 import { TRAINING_STEPS, type TrainingStep } from "@/lib/training-steps";
 
 type StoredImage = {
@@ -32,6 +33,8 @@ export function TrainingImageGallery() {
   const [configured, setConfigured] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
 
   const loadImages = useCallback(async (step: TrainingStep) => {
     setLoading(true);
@@ -59,6 +62,60 @@ export function TrainingImageGallery() {
   useEffect(() => {
     loadImages(activeStep);
   }, [activeStep, loadImages]);
+
+  const downloadAll = useCallback(async () => {
+    const downloadable = images.filter((img) => img.url);
+    if (downloadable.length === 0) return;
+
+    setDownloading(true);
+    setDownloadProgress(0);
+    setError(null);
+    try {
+      const zip = new JSZip();
+      const used = new Set<string>();
+      let done = 0;
+
+      for (const img of downloadable) {
+        try {
+          const res = await fetch(img.url as string);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const blob = await res.blob();
+          // Guard against duplicate filenames inside the zip.
+          let entry = img.name;
+          let n = 1;
+          while (used.has(entry)) {
+            const dot = img.name.lastIndexOf(".");
+            entry =
+              dot > 0
+                ? `${img.name.slice(0, dot)} (${n})${img.name.slice(dot)}`
+                : `${img.name} (${n})`;
+            n += 1;
+          }
+          used.add(entry);
+          zip.file(entry, blob);
+        } catch {
+          // Skip an individual image that fails; keep zipping the rest.
+        }
+        done += 1;
+        setDownloadProgress(Math.round((done / downloadable.length) * 100));
+      }
+
+      const archive = await zip.generateAsync({ type: "blob" });
+      const href = URL.createObjectURL(archive);
+      const a = document.createElement("a");
+      a.href = href;
+      a.download = `nail-engineer-step-${activeStep.number}-${activeStep.id}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(href);
+    } catch {
+      setError("Could not build the zip. Try again.");
+    } finally {
+      setDownloading(false);
+      setDownloadProgress(0);
+    }
+  }, [images, activeStep]);
 
   return (
     <div className="mt-10">
@@ -112,13 +169,27 @@ export function TrainingImageGallery() {
               </span>
             )}
           </h2>
-          <button
-            type="button"
-            onClick={() => loadImages(activeStep)}
-            className="text-sm font-semibold text-mauve-600 hover:text-rose-900 hover:underline"
-          >
-            Refresh
-          </button>
+          <div className="flex items-center gap-4">
+            {!loading && images.some((img) => img.url) && (
+              <button
+                type="button"
+                onClick={downloadAll}
+                disabled={downloading}
+                className="rounded-full border border-rose-900 bg-rose-900 px-4 py-2 text-sm font-semibold text-cream-50 transition-colors hover:bg-rose-800 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {downloading
+                  ? `Zipping… ${downloadProgress}%`
+                  : `Download all (${images.filter((img) => img.url).length})`}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => loadImages(activeStep)}
+              className="text-sm font-semibold text-mauve-600 hover:text-rose-900 hover:underline"
+            >
+              Refresh
+            </button>
+          </div>
         </div>
 
         {error && (

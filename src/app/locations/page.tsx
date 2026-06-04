@@ -3,8 +3,8 @@ import Link from "next/link";
 import { MarketingLayout } from "@/components/MarketingLayout";
 
 export const metadata: Metadata = {
-  title: "Locations — Nail Engineer",
-  description: "Where to find Nail Engineer in person—studio and pop-up details as they are announced.",
+  title: "Locations, Nail Engineer",
+  description: "Where to find Nail Engineer in person-studio and pop-up details as they are announced.",
 };
 
 export default function LocationsPage() {
@@ -19,7 +19,7 @@ export default function LocationsPage() {
         on this page when they are confirmed.
       </p>
       <p>
-        Longer term, we are designing an in-person salon concept—The Mani-Cave—to normalize male
+        Longer term, we are designing an in-person salon concept-The Mani-Cave-to normalize male
         nail care and create room for community. Announcements will appear on this page and in{" "}
         <Link href="/for-the-guys" className="font-semibold text-rose-800 hover:underline">
           For the Guys

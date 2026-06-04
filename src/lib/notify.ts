@@ -12,52 +12,37 @@
  *   TRAINING_NOTIFY_FROM      verified sender (default: onboarding@resend.dev)
  */
 
-const DEFAULT_TO = "amiemasih2027@u.northwestern.edu";
+// Default recipients for production. TRAINING_NOTIFY_EMAIL can override with a
+// comma-separated list. NOTE: the sandbox sender below only delivers to the
+// Resend account owner until nailengineer.org is verified at resend.com/domains.
+const DEFAULT_TO = "thenailengineermail@gmail.com,peanjayden@gmail.com";
 // Resend's shared sandbox sender works without verifying a domain, but can
 // only deliver to the Resend account owner's address. Set TRAINING_NOTIFY_FROM
-// to an address on your own verified domain for production delivery.
+// to an address on your own verified domain (e.g. notify@nailengineer.org) for
+// production delivery.
 const DEFAULT_FROM = "Nail Engineer <onboarding@resend.dev>";
 
 export function notificationsConfigured(): boolean {
   return Boolean(process.env.RESEND_API_KEY);
 }
 
-export type SubmissionNotice = {
-  stepTitle: string;
-  stepId: string;
-  uploadedCount: number;
-};
+/** Recipient list, parsed from TRAINING_NOTIFY_EMAIL (comma-separated). */
+function recipients(): string[] {
+  return (process.env.TRAINING_NOTIFY_EMAIL || DEFAULT_TO)
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
 
-/**
- * Email the team that a step's training images changed. Returns true if the
- * send succeeded; never throws.
- */
-export async function notifyTrainingSubmission(
-  notice: SubmissionNotice,
-): Promise<boolean> {
+/** Low-level best-effort send. Returns true on success; never throws. */
+async function sendEmail(subject: string, text: string): Promise<boolean> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
-    // Not configured — quietly skip so uploads still work in dev.
+    // Not configured, quietly skip so uploads still work in dev.
     return false;
   }
-
-  const to = process.env.TRAINING_NOTIFY_EMAIL || DEFAULT_TO;
+  const to = recipients();
   const from = process.env.TRAINING_NOTIFY_FROM || DEFAULT_FROM;
-  const when = new Date().toLocaleString("en-US", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
-
-  const count = notice.uploadedCount;
-  const plural = count === 1 ? "image" : "images";
-  const subject = `Nail training images: changes to "${notice.stepTitle}"`;
-  const text =
-    `There have been changes to step "${notice.stepTitle}" of the nail ` +
-    `training images.\n\n` +
-    `${count} new ${plural} submitted (${when}).\n\n` +
-    `View them in the Supabase storage bucket under the ` +
-    `${notice.stepId}/ folder.`;
-
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -69,12 +54,93 @@ export async function notifyTrainingSubmission(
     });
     if (!res.ok) {
       const body = await res.text().catch(() => "");
-      console.error("training submission notify failed", res.status, body);
+      console.error("notify send failed", res.status, body);
       return false;
     }
     return true;
   } catch (err) {
-    console.error("training submission notify error", err);
+    console.error("notify send error", err);
     return false;
   }
+}
+
+export type SubmissionNotice = {
+  stepTitle: string;
+  stepId: string;
+  uploadedCount: number;
+  submitterName?: string;
+  submitterType?: string;
+};
+
+/**
+ * Email the team that a step's training images changed. Returns true if the
+ * send succeeded; never throws.
+ */
+export async function notifyTrainingSubmission(
+  notice: SubmissionNotice,
+): Promise<boolean> {
+  const when = new Date().toLocaleString("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+
+  const count = notice.uploadedCount;
+  const plural = count === 1 ? "image" : "images";
+  const who = notice.submitterName
+    ? `${notice.submitterName}` +
+      (notice.submitterType ? ` (${notice.submitterType})` : "")
+    : "Someone";
+  const subject = `Nail training images: changes to "${notice.stepTitle}"`;
+  const text =
+    `${who} submitted training photos for step "${notice.stepTitle}".\n\n` +
+    `${count} new ${plural} submitted (${when}).\n\n` +
+    `View them in the Supabase storage bucket under the ` +
+    `${notice.stepId}/ folder.`;
+
+  return sendEmail(subject, text);
+}
+
+export type PopOffNotice = {
+  submitterName?: string;
+  submitterType?: string;
+  leftFingers: string[];
+  rightFingers: string[];
+  nailsDoneDate?: string | null;
+  poppedOffDate?: string | null;
+  notes?: string | null;
+  photoCount: number;
+};
+
+/**
+ * Email the team that a tech reported nails popping off. Best-effort; never
+ * throws.
+ */
+export async function notifyPopOff(notice: PopOffNotice): Promise<boolean> {
+  const who = notice.submitterName
+    ? `${notice.submitterName}` +
+      (notice.submitterType ? ` (${notice.submitterType})` : "")
+    : "Someone";
+  const fingers = (hand: string, list: string[]) =>
+    list.length ? `${hand}: ${list.join(", ")}` : `${hand}: none`;
+
+  const subject = "Nail Engineer: a pop-off was reported";
+  const lines = [
+    `${who} reported that nails popped off.`,
+    "",
+    fingers("Left hand", notice.leftFingers),
+    fingers("Right hand", notice.rightFingers),
+    "",
+    `Nails done: ${notice.nailsDoneDate || "-"}`,
+    `Popped off: ${notice.poppedOffDate || "-"}`,
+  ];
+  if (notice.notes) lines.push("", `Notes: ${notice.notes}`);
+  if (notice.photoCount > 0) {
+    lines.push(
+      "",
+      `${notice.photoCount} photo${notice.photoCount === 1 ? "" : "s"} ` +
+        `attached, see the pop-off-reports/ folder in Supabase storage.`,
+    );
+  }
+
+  return sendEmail(subject, lines.join("\n"));
 }

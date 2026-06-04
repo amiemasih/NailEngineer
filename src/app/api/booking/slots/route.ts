@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { computeAvailableSlots } from "@/lib/booking-engine";
 import { getServiceById } from "@/lib/services-catalog";
+import { getBusyIntervals } from "@/lib/google-calendar";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -24,7 +25,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Invalid date range." }, { status: 400 });
   }
 
-  const [blocks, bookings] = await Promise.all([
+  const [blocks, bookings, googleBusy] = await Promise.all([
     prisma.availabilityBlock.findMany({
       where: { endAt: { gt: rangeStart }, startAt: { lt: rangeEnd } },
       orderBy: { startAt: "asc" },
@@ -36,12 +37,14 @@ export async function GET(req: Request) {
         startAt: { lt: rangeEnd },
       },
     }),
+    // Jayden's external Google events count as UNAVAILABLE (no-op if not connected).
+    getBusyIntervals(rangeStart, rangeEnd),
   ]);
 
   const slots = computeAvailableSlots(
     rangeStart,
     rangeEnd,
-    blocks,
+    [...blocks, ...googleBusy],
     bookings,
     service.durationMins,
     15,

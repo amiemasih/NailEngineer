@@ -6,7 +6,7 @@ import { getActivePromotions, getFeaturedPromotions } from "@/lib/promotions";
 import { activePromotionsForService } from "@/lib/promotion-utils";
 
 export const metadata: Metadata = {
-  title: "Services & Pricing — Nail Engineer",
+  title: "Services & Pricing, Nail Engineer",
   description:
     "Nail services with clear base pricing, ranges for custom art, and live promotions including student and event offers.",
 };
@@ -132,7 +132,7 @@ export default function ServicesPage() {
           <div className="rounded-2xl border-2 border-zinc-300 bg-gradient-to-b from-cream-100 to-cream-50 p-6 shadow-sm">
             <h2 className="font-display text-xl font-bold text-rose-900">Active discounts &amp; promos</h2>
             <p className="mt-2 text-sm text-mauve-600 leading-relaxed">
-              Eligibility and dates update here automatically—offers outside their window disappear
+              Eligibility and dates update here automatically-offers outside their window disappear
               without changing the page layout.
             </p>
             {activePromos.length === 0 ? (

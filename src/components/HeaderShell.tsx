@@ -1,16 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { MAIN_NAV } from "@/lib/nav";
 import { Logo } from "@/components/Logo";
 
 type Session = { userId: string; email: string } | null;
 
 type Props = { session: Session };
-
-const SCROLL_THRESHOLD = 48;
 
 function UserIcon({ className }: { className?: string }) {
   return (
@@ -61,27 +58,11 @@ function SessionLinks({
 }
 
 export function HeaderShell({ session }: Props) {
-  const pathname = usePathname();
-  const isHome = pathname === "/";
-  const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
 
-  const onScroll = useCallback(() => {
-    setScrolled(window.scrollY > SCROLL_THRESHOLD);
-  }, []);
-
-  useEffect(() => {
-    if (!isHome) {
-      setScrolled(true);
-      return;
-    }
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [isHome, onScroll]);
-
-  const heroBar = isHome && !scrolled;
+  // Always show the standard cream header with full nav (no transparent hero bar).
+  const heroBar = false;
   const linkClass =
     "rounded-lg px-2 py-2 hover:text-rose-800 transition-colors whitespace-nowrap text-mauve-600";
 
@@ -89,7 +70,7 @@ export function HeaderShell({ session }: Props) {
     <header
       className={
         heroBar
-          ? "relative sticky top-0 z-50 border-b border-transparent bg-transparent pt-[env(safe-area-inset-top,0px)]"
+          ? "relative sticky top-0 z-50 border-b border-white/10 bg-zinc-950/95 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md"
           : "relative sticky top-0 z-50 border-b border-cream-200 bg-cream-50/90 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md transition-colors duration-300"
       }
     >

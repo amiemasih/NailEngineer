@@ -211,7 +211,7 @@ export function BookingFlow() {
       ) : slots.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-cream-300 bg-white p-8 text-mauve-600">
           No bookable slots this week for that service. Jayden may still be loading his biweekly
-          availability—try another week or{" "}
+          availability-try another week or{" "}
           <Link href="/contact" className="font-semibold text-rose-800 hover:underline">
             contact
           </Link>

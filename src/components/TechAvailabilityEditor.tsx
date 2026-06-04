@@ -159,7 +159,7 @@ export function TechAvailabilityEditor() {
           <li className={`rounded-full px-3 py-1 border ${stateStyles.UNAVAILABLE}`}>Unavailable</li>
         </ul>
         <p className="mt-3 text-xs text-mauve-600 leading-relaxed max-w-2xl">
-          Block <strong>unavailable</strong> from the time you need travel or wind-down—not from the
+          Block <strong>unavailable</strong> from the time you need travel or wind-down-not from the
           exact start of your next class. Clients can only book <strong>Free</strong> or{" "}
           <strong>Only if necessary</strong>; limited windows enforce a 30-minute buffer before the
           next unavailable block on the public booker.
@@ -203,9 +203,9 @@ export function TechAvailabilityEditor() {
             onChange={(e) => setState(e.target.value as Block["state"])}
             className="mt-1 w-full max-w-md rounded-xl border border-cream-300 bg-white px-3 py-2 text-sm"
           >
-            <option value="FREE">Free — open booking</option>
-            <option value="LIMITED">Only if necessary — tighter buffers</option>
-            <option value="UNAVAILABLE">Unavailable — no booking</option>
+            <option value="FREE">Free, open booking</option>
+            <option value="LIMITED">Only if necessary, tighter buffers</option>
+            <option value="UNAVAILABLE">Unavailable, no booking</option>
           </select>
         </div>
         <div>

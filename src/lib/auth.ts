@@ -47,7 +47,7 @@ export async function getSession() {
   try {
     return await verifySessionToken(token);
   } catch {
-    // Bad, expired, or tampered cookie — avoid 500 on every page
+    // Bad, expired, or tampered cookie, avoid 500 on every page
     return null;
   }
 }

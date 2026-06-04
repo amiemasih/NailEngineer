@@ -9,7 +9,7 @@ export type ServiceItem = {
   category: string;
   name: string;
   description: string;
-  /** Approximate chair time — helps clients plan */
+  /** Approximate chair time, helps clients plan */
   durationMins?: number;
   pricing: ServicePricing;
   /** Shown under price, e.g. removal policy */
@@ -21,7 +21,7 @@ export const PRICE_BOOK_UPDATED = "March 2026";
 
 /**
  * Single source of truth for menu + base pricing.
- * Add rows or categories here as offerings grow—no page structure changes required.
+ * Add rows or categories here as offerings grow-no page structure changes required.
  */
 export const SERVICES: ServiceItem[] = [
   {
@@ -44,7 +44,7 @@ export const SERVICES: ServiceItem[] = [
     id: "mens-grooming",
     category: "Manicure & maintenance",
     name: "Men’s grooming manicure",
-    description: "Trim, file, cuticle tidy, buff—no polish unless requested.",
+    description: "Trim, file, cuticle tidy, buff-no polish unless requested.",
     durationMins: 35,
     pricing: { kind: "fixed", amount: 32 },
   },
@@ -67,7 +67,7 @@ export const SERVICES: ServiceItem[] = [
   {
     id: "nail-art-tier1",
     category: "Nail art",
-    name: "Nail art — accent & simple design",
+    name: "Nail art, accent & simple design",
     description: "French variation, minimal line work, micro accents on 1–2 nails.",
     durationMins: 75,
     pricing: { kind: "range", min: 15, max: 35 },
@@ -76,7 +76,7 @@ export const SERVICES: ServiceItem[] = [
   {
     id: "nail-art-tier2",
     category: "Nail art",
-    name: "Nail art — full design",
+    name: "Nail art, full design",
     description: "Custom art, layering, foils, or multi-nail composition.",
     durationMins: 90,
     pricing: { kind: "range", min: 40, max: 120 },

@@ -6,7 +6,7 @@ import { listTrainingImages, storageConfigured } from "@/lib/supabase-storage";
 export const runtime = "nodejs";
 
 // Private admin listing. This lives under /api/tech/, so the middleware
-// requires a valid tech session before the request reaches here — unlike the
+// requires a valid tech session before the request reaches here, unlike the
 // public /api/training-images endpoint, this one CAN list stored images.
 
 /** GET /api/tech/training-images?step=<id>: list a step's submitted images. */

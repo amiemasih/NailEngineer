@@ -4,15 +4,15 @@ import { prisma } from "@/lib/prisma";
 import { PAGE_TITLE_CLASS } from "@/lib/pageTitle";
 
 export const metadata: Metadata = {
-  title: "For the Guys — Nail Engineer",
+  title: "For the Guys, Nail Engineer",
   description:
-    "Nail care and grooming for men—beginner-friendly courses, clear guides, and stigma-free education. Build habits with confidence.",
+    "Nail care and grooming for men-beginner-friendly courses, clear guides, and stigma-free education. Build habits with confidence.",
 };
 
 const PODCAST_COMING = [
   {
     title: "Hands 101",
-    blurb: "Why nails matter for first impressions—and what “healthy” actually looks like.",
+    blurb: "Why nails matter for first impressions-and what “healthy” actually looks like.",
   },
   {
     title: "Breaking the bite",
@@ -35,7 +35,7 @@ const GROOMING_GUIDES = [
   },
   {
     title: "Dry hands & weak nails",
-    detail: "Hydration habits that stick—especially if you lift, type, or wash often.",
+    detail: "Hydration habits that stick-especially if you lift, type, or wash often.",
   },
   {
     title: "Before interviews & dates",
@@ -56,7 +56,7 @@ export default async function ForTheGuysPage() {
         <p className="mt-4 text-lg text-mauve-600 leading-relaxed">
           A dedicated lane for men who want better nail care without the awkward vibes. We use plain
           language, structured lessons, and audio-friendly formats so you can learn at your pace,
-          build habits, and feel like this stuff is normal—not a secret side quest.
+          build habits, and feel like this stuff is normal-not a secret side quest.
         </p>
         <p className="mt-6 text-mauve-600 leading-relaxed">
           The goal is simple: <strong className="font-semibold text-ink">normalize self-care</strong>
@@ -69,15 +69,15 @@ export default async function ForTheGuysPage() {
         <h2 className="font-display text-2xl font-bold text-rose-900">How we reduce intimidation</h2>
         <ul className="list-disc pl-5 space-y-2 text-mauve-600 leading-relaxed">
           <li>
-            <strong className="font-semibold text-ink">Beginner-first pacing</strong> — Modules start
+            <strong className="font-semibold text-ink">Beginner-first pacing</strong>, Modules start
             with hygiene and habits before anything flashy.
           </li>
           <li>
-            <strong className="font-semibold text-ink">Straight talk</strong> — No gatekeeping, no
+            <strong className="font-semibold text-ink">Straight talk</strong>, No gatekeeping, no
             assuming you already live in salon culture.
           </li>
           <li>
-            <strong className="font-semibold text-ink">Structure you can trust</strong> — Every step
+            <strong className="font-semibold text-ink">Structure you can trust</strong>, Every step
             has a why, so you are never guessing what comes next.
           </li>
         </ul>
@@ -87,7 +87,7 @@ export default async function ForTheGuysPage() {
         <div className="max-w-3xl">
           <h2 className="font-display text-2xl font-bold text-rose-900">Courses</h2>
           <p className="mt-3 text-mauve-600 leading-relaxed">
-            Every path below is available to you here—start with fundamentals, then layer nail health
+            Every path below is available to you here-start with fundamentals, then layer nail health
             or art when you are ready. Pick a course, then{" "}
             <Link href="/register" className="font-semibold text-rose-800 hover:underline">
               join as a student
@@ -140,7 +140,7 @@ export default async function ForTheGuysPage() {
         <div className="max-w-3xl">
           <h2 className="font-display text-2xl font-bold text-rose-900">Podcast-style audio</h2>
           <p className="mt-3 text-mauve-600 leading-relaxed">
-            Short listens you can queue on a walk or between classes—same standards as the modules,
+            Short listens you can queue on a walk or between classes-same standards as the modules,
             just easier to fit into a busy day. Episodes drop here first; subscribe alerts are coming
             soon.
           </p>
@@ -165,7 +165,7 @@ export default async function ForTheGuysPage() {
         <div className="max-w-3xl">
           <h2 className="font-display text-2xl font-bold text-rose-900">Grooming guides</h2>
           <p className="mt-3 text-mauve-600 leading-relaxed">
-            Quick entry points if you are brand new—each topic maps to deeper lessons inside the
+            Quick entry points if you are brand new-each topic maps to deeper lessons inside the
             courses above.
           </p>
         </div>

@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import type { ArchiveEntry } from "@/lib/nail-archive";
 import { formatDesignLabel } from "@/lib/nail-archive";
 
@@ -7,17 +6,13 @@ type Props = { entry: ArchiveEntry };
 
 export function ArchivePortfolioTile({ entry }: Props) {
   const hasImage = Boolean(entry.imageSrc);
-  const href = entry.primaryLink?.href ?? "/book";
   const label = formatDesignLabel(entry.designNumber);
   const alt =
-    entry.imageAlt ?? `The Nail Engineer — ${label}, nail design sample`;
+    entry.imageAlt ?? `The Nail Engineer, ${label}, nail design sample`;
 
   return (
     <li className="relative aspect-[4/5] min-h-0 list-none">
-      <Link
-        href={href}
-        className="group relative block h-full w-full overflow-hidden bg-zinc-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900"
-      >
+      <div className="group relative block h-full w-full overflow-hidden rounded-sm bg-stone-100 shadow-[0_14px_36px_-20px_rgba(68,64,60,0.5)]">
         {hasImage && entry.imageSrc ? (
           <Image
             src={entry.imageSrc}
@@ -28,7 +23,7 @@ export function ArchivePortfolioTile({ entry }: Props) {
           />
         ) : (
           <div
-            className="absolute inset-0 bg-gradient-to-br from-zinc-200 via-zinc-100 to-zinc-300"
+            className="absolute inset-0 bg-gradient-to-br from-stone-200 via-stone-100 to-stone-300"
             aria-hidden
           />
         )}
@@ -48,7 +43,7 @@ export function ArchivePortfolioTile({ entry }: Props) {
             className="h-7 w-7 drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] sm:h-8 sm:w-8"
           />
         </div>
-      </Link>
+      </div>
     </li>
   );
 }
