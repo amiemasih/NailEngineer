@@ -124,6 +124,26 @@ export type StoredImage = {
   createdAt: string | null;
 };
 
+/**
+ * Sign a known list of storage paths (e.g. image paths from the database),
+ * returning a path -> short-lived signed URL map. Used to show a single
+ * submitter's photos, which storage listing alone can't group by uploader.
+ */
+export async function signTrainingPaths(
+  paths: string[],
+): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  if (paths.length === 0) return map;
+  const client = getClient();
+  const { data: signed } = await client.storage
+    .from(TRAINING_BUCKET)
+    .createSignedUrls(paths, 60 * 60); // 1 hour
+  for (const s of signed ?? []) {
+    if (s.path && s.signedUrl) map.set(s.path, s.signedUrl);
+  }
+  return map;
+}
+
 /** List images already uploaded for a step, with short-lived signed URLs. */
 export async function listTrainingImages(
   folder: string,

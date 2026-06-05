@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import JSZip from "jszip";
 import { TRAINING_STEPS, type TrainingStep } from "@/lib/training-steps";
 
@@ -27,7 +27,15 @@ function formatDate(iso: string | null): string {
     : d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 }
 
-export function TrainingImageGallery() {
+export function TrainingImageGallery({
+  filterPaths = null,
+  filterLabel = null,
+}: {
+  /** When set, only images whose storage path is in this list are shown. */
+  filterPaths?: string[] | null;
+  /** Name of the person the gallery is filtered to (for empty-state copy). */
+  filterLabel?: string | null;
+} = {}) {
   const [activeStep, setActiveStep] = useState<TrainingStep>(TRAINING_STEPS[0]);
   const [images, setImages] = useState<StoredImage[]>([]);
   const [configured, setConfigured] = useState(true);
@@ -35,6 +43,15 @@ export function TrainingImageGallery() {
   const [error, setError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
+
+  const filterSet = useMemo(
+    () => (filterPaths ? new Set(filterPaths) : null),
+    [filterPaths],
+  );
+  const visible = useMemo(
+    () => (filterSet ? images.filter((img) => filterSet.has(img.path)) : images),
+    [images, filterSet],
+  );
 
   const loadImages = useCallback(async (step: TrainingStep) => {
     setLoading(true);
@@ -64,7 +81,7 @@ export function TrainingImageGallery() {
   }, [activeStep, loadImages]);
 
   const downloadAll = useCallback(async () => {
-    const downloadable = images.filter((img) => img.url);
+    const downloadable = visible.filter((img) => img.url);
     if (downloadable.length === 0) return;
 
     setDownloading(true);
@@ -115,10 +132,17 @@ export function TrainingImageGallery() {
       setDownloading(false);
       setDownloadProgress(0);
     }
-  }, [images, activeStep]);
+  }, [visible, activeStep]);
 
   return (
-    <div className="mt-10">
+    <div className="mt-14">
+      {filterLabel && (
+        <p className="mb-5 text-sm text-stone-600">
+          Showing only photos submitted by{" "}
+          <span className="font-semibold text-stone-900">{filterLabel}</span>.
+        </p>
+      )}
+
       {/* Step tabs */}
       <div className="flex flex-wrap gap-2">
         {TRAINING_STEPS.map((step) => {
@@ -130,15 +154,15 @@ export function TrainingImageGallery() {
               onClick={() => setActiveStep(step)}
               className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
                 active
-                  ? "border-rose-900 bg-rose-900 text-cream-50"
-                  : "border-cream-300 bg-white text-rose-900 hover:border-rose-300"
+                  ? "border-stone-900 bg-stone-900 text-white"
+                  : "border-stone-300 bg-white text-stone-700 hover:border-amber-300"
               }`}
             >
               <span className="tabular-nums">Step {step.number}</span> · {step.title}
               {step.optional && (
                 <span
                   className={`ml-2 rounded-full px-1.5 py-0.5 text-[10px] uppercase tracking-wide ${
-                    active ? "bg-cream-50/20 text-cream-50" : "bg-cream-200 text-mauve-600"
+                    active ? "bg-white/20 text-white" : "bg-stone-200 text-stone-500"
                   }`}
                 >
                   Optional
@@ -150,7 +174,7 @@ export function TrainingImageGallery() {
       </div>
 
       {!configured && (
-        <div className="mt-6 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm text-amber-900">
+        <div className="mt-6 rounded-sm border border-amber-300 bg-amber-50 p-5 text-sm text-amber-900">
           <p className="font-semibold">Cloud storage isn’t connected yet.</p>
           <p className="mt-1">
             Add <code>SUPABASE_URL</code> and <code>SUPABASE_SERVICE_ROLE_KEY</code> to your
@@ -161,31 +185,31 @@ export function TrainingImageGallery() {
 
       <div className="mt-8">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-2xl font-bold text-rose-900">
+          <h2 className="font-display text-2xl font-normal tracking-tight text-stone-900">
             {activeStep.title}
             {!loading && (
-              <span className="ml-2 text-base font-semibold text-mauve-600 tabular-nums">
-                ({images.length})
+              <span className="ml-2 text-base font-semibold text-stone-500 tabular-nums">
+                ({visible.length})
               </span>
             )}
           </h2>
           <div className="flex items-center gap-4">
-            {!loading && images.some((img) => img.url) && (
+            {!loading && visible.some((img) => img.url) && (
               <button
                 type="button"
                 onClick={downloadAll}
                 disabled={downloading}
-                className="rounded-full border border-rose-900 bg-rose-900 px-4 py-2 text-sm font-semibold text-cream-50 transition-colors hover:bg-rose-800 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-full border border-stone-900 bg-stone-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-stone-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {downloading
                   ? `Zipping… ${downloadProgress}%`
-                  : `Download all (${images.filter((img) => img.url).length})`}
+                  : `Download all (${visible.filter((img) => img.url).length})`}
               </button>
             )}
             <button
               type="button"
               onClick={() => loadImages(activeStep)}
-              className="text-sm font-semibold text-mauve-600 hover:text-rose-900 hover:underline"
+              className="text-sm font-semibold text-stone-500 hover:text-amber-800 hover:underline"
             >
               Refresh
             </button>
@@ -193,21 +217,25 @@ export function TrainingImageGallery() {
         </div>
 
         {error && (
-          <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800">
+          <p className="mt-4 rounded-sm border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900">
             {error}
           </p>
         )}
 
         {loading ? (
-          <p className="mt-4 text-mauve-600">Loading…</p>
-        ) : images.length === 0 ? (
-          <p className="mt-4 text-mauve-600">No images submitted to this step yet.</p>
+          <p className="mt-4 text-stone-500">Loading…</p>
+        ) : visible.length === 0 ? (
+          <p className="mt-4 text-stone-500">
+            {filterLabel
+              ? `No images from ${filterLabel} in this step.`
+              : "No images submitted to this step yet."}
+          </p>
         ) : (
           <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-            {images.map((img) => (
+            {visible.map((img) => (
               <li
                 key={img.path}
-                className="overflow-hidden rounded-xl border border-cream-200 bg-white"
+                className="overflow-hidden rounded-sm border border-stone-200 bg-white"
               >
                 {img.url ? (
                   <a href={img.url} target="_blank" rel="noreferrer">
@@ -219,13 +247,13 @@ export function TrainingImageGallery() {
                     />
                   </a>
                 ) : (
-                  <div className="flex aspect-square w-full items-center justify-center bg-cream-100 text-xs text-mauve-600">
+                  <div className="flex aspect-square w-full items-center justify-center bg-stone-100 text-xs text-stone-500">
                     No preview
                   </div>
                 )}
                 <div className="px-2 py-1.5">
-                  <p className="truncate text-xs text-ink">{img.name}</p>
-                  <p className="text-[11px] text-mauve-600">
+                  <p className="truncate text-xs text-stone-700">{img.name}</p>
+                  <p className="text-[11px] text-stone-500">
                     {[formatSize(img.size), formatDate(img.createdAt)]
                       .filter(Boolean)
                       .join(" · ")}

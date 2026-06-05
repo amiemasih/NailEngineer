@@ -21,8 +21,7 @@ export default function TrainingDataPage() {
           Training data
         </h1>
         <p className="mt-4 max-w-2xl text-lg leading-relaxed text-stone-600">
-          Upload reference photos for each stage of a service. Pick the step, drop the photos, and
-          click submit!
+          Pick the prep step, upload the photos, and click submit!
         </p>
 
         <div className="mt-6">

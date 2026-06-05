@@ -33,7 +33,7 @@ export const TRAINING_STEPS: TrainingStep[] = [
     number: "1",
     title: "Before",
     hint: "The starting nail before any work: existing polish or a bare nail.",
-    praise: "prep looks amazing!",
+    praise: "great starting shot!",
   },
   {
     id: "step-2-polish-removal",
@@ -63,9 +63,9 @@ export const TRAINING_STEPS: TrainingStep[] = [
   {
     id: "step-5-6-trim-buffed-nails",
     folder: "step-5-6-trim-buffed-nails",
-    number: "5 / 6",
-    title: "Trim Cuticles & / or Buffed Nails",
-    hint: "Cuticles trimmed and/or the nail buffed and prepped.",
+    number: "5",
+    title: "Trim Cuticles & Buff Nails",
+    hint: "Cuticles trimmed and the nail buffed and prepped.",
     praise: "the trim & buff shots look amazing!",
   },
 ];

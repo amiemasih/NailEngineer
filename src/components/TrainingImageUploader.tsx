@@ -206,7 +206,7 @@ export function TrainingImageUploader() {
 
       <p className="mt-4 text-sm text-stone-600">
         <span className="font-semibold text-stone-900">{activeStep.title}:</span>{" "}
-        {activeStep.hint} Review the photos below, remove any that aren’t right, then submit.
+        {activeStep.hint}
       </p>
 
       {!configured && (

@@ -5,7 +5,7 @@ export function Footer() {
   const year = new Date().getFullYear();
   return (
     <footer className="border-t border-stone-200 bg-[#faf7f2]">
-      <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-4 py-7 sm:flex-row sm:justify-between sm:px-6">
+      <div className="mx-auto flex max-w-screen-2xl flex-col items-center gap-4 px-6 py-7 sm:flex-row sm:justify-between sm:px-10">
         <Logo href="/" size="md" />
 
         <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-medium text-stone-600">
@@ -15,12 +15,6 @@ export function Footer() {
           <Link href="/nail-archive" className="transition-colors hover:text-stone-900">
             The Nail Archive
           </Link>
-          <a
-            href="mailto:thenailengineermail@gmail.com"
-            className="transition-colors hover:text-stone-900"
-          >
-            Contact
-          </a>
           <a
             href="https://www.instagram.com/thenailengineer_/"
             target="_blank"

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getTrainingStep } from "@/lib/training-steps";
 import {
   storageConfigured,
@@ -75,32 +75,37 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "No images provided." }, { status: 400 });
   }
 
-  const uploaded: { name: string; path: string }[] = [];
-  const failed: { name: string; reason: string }[] = [];
+  type Outcome =
+    | { uploaded: { name: string; path: string } }
+    | { failed: { name: string; reason: string } };
 
-  for (const file of files) {
-    if (!file.type.startsWith("image/")) {
-      failed.push({ name: file.name, reason: "Not an image file." });
-      continue;
-    }
-    if (file.size > MAX_IMAGE_BYTES) {
-      failed.push({ name: file.name, reason: "Larger than 25 MB." });
-      continue;
-    }
-    try {
-      const bytes = await file.arrayBuffer();
-      const result = await uploadTrainingImage({
-        folder: step.folder,
-        originalName: file.name || "image",
-        contentType: file.type,
-        bytes,
-      });
-      uploaded.push(result);
-    } catch (err) {
-      console.error("training-image upload failed", file.name, err);
-      failed.push({ name: file.name, reason: "Upload failed." });
-    }
-  }
+  // Upload all files in parallel so multi-image submissions aren't serialized.
+  const results = await Promise.all(
+    files.map(async (file): Promise<Outcome> => {
+      if (!file.type.startsWith("image/")) {
+        return { failed: { name: file.name, reason: "Not an image file." } };
+      }
+      if (file.size > MAX_IMAGE_BYTES) {
+        return { failed: { name: file.name, reason: "Larger than 25 MB." } };
+      }
+      try {
+        const bytes = await file.arrayBuffer();
+        const result = await uploadTrainingImage({
+          folder: step.folder,
+          originalName: file.name || "image",
+          contentType: file.type,
+          bytes,
+        });
+        return { uploaded: result };
+      } catch (err) {
+        console.error("training-image upload failed", file.name, err);
+        return { failed: { name: file.name, reason: "Upload failed." } };
+      }
+    }),
+  );
+
+  const uploaded = results.flatMap((r) => ("uploaded" in r ? [r.uploaded] : []));
+  const failed = results.flatMap((r) => ("failed" in r ? [r.failed] : []));
 
   // Persist the submission so it's attributed and tracked in the database.
   // Best-effort: a DB hiccup must not lose a successful upload.
@@ -122,15 +127,18 @@ export async function POST(req: Request) {
     }
   }
 
-  // Best-effort notification, never blocks or fails the submission.
+  // Best-effort notification, sent AFTER the response so the submitter never
+  // waits on the email round-trip. `after()` keeps the function alive to finish.
   if (uploaded.length > 0) {
-    await notifyTrainingSubmission({
-      stepId: step.id,
-      stepTitle: step.title,
-      uploadedCount: uploaded.length,
-      submitterName: submitter.name,
-      submitterType: submitter.type,
-    });
+    after(
+      notifyTrainingSubmission({
+        stepId: step.id,
+        stepTitle: step.title,
+        uploadedCount: uploaded.length,
+        submitterName: submitter.name,
+        submitterType: submitter.type,
+      }),
+    );
   }
 
   const status = uploaded.length === 0 ? 502 : 200;

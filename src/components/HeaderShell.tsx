@@ -74,7 +74,7 @@ export function HeaderShell({ session }: Props) {
           : "relative sticky top-0 z-50 border-b border-cream-200 bg-cream-50/90 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md transition-colors duration-300"
       }
     >
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6">
+      <div className="mx-auto flex max-w-screen-2xl flex-wrap items-center justify-between gap-4 px-6 py-3 sm:px-10">
         <div className="shrink-0">
           <Logo size="lg" variant={heroBar ? "onDark" : "default"} />
         </div>
