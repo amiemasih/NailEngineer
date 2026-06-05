@@ -4,8 +4,8 @@
   --font-display: var(--font-instrument-serif), ui-serif, Georgia, serif;
   --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
 
-  /* Monochrome, greyer page, light surfaces, charcoal accents */
-  --color-page: #c8c8cf;
+  /* Warm ivory page base (matches the footer + WarmBackground canvas) */
+  --color-page: #faf7f2;
   --color-cream-50: #f4f4f5;
   --color-cream-100: #e4e4e7;
   --color-cream-200: #d4d4d8;
