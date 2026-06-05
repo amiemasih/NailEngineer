@@ -79,9 +79,12 @@ export type SubmissionNotice = {
 export async function notifyTrainingSubmission(
   notice: SubmissionNotice,
 ): Promise<boolean> {
+  // Format in Central time. The server (Vercel) runs in UTC, so without an
+  // explicit timeZone the timestamp would render ~5-6 hours ahead of local time.
   const when = new Date().toLocaleString("en-US", {
     dateStyle: "medium",
     timeStyle: "short",
+    timeZone: "America/Chicago",
   });
 
   const count = notice.uploadedCount;
@@ -93,7 +96,7 @@ export async function notifyTrainingSubmission(
   const subject = `Nail training images: changes to "${notice.stepTitle}"`;
   const text =
     `${who} submitted training photos for step "${notice.stepTitle}".\n\n` +
-    `${count} new ${plural} submitted (${when}).\n\n` +
+    `${count} new ${plural} submitted (${when} CT).\n\n` +
     `View them in the Supabase storage bucket under the ` +
     `${notice.stepId}/ folder.`;
 
