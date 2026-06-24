@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import JSZip from "jszip";
 import { TRAINING_STEPS, type TrainingStep } from "@/lib/training-steps";
 
@@ -237,20 +237,7 @@ export function TrainingImageGallery({
                 key={img.path}
                 className="overflow-hidden rounded-sm border border-stone-200 bg-white"
               >
-                {img.url ? (
-                  <a href={img.url} target="_blank" rel="noreferrer">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={img.url}
-                      alt={img.name}
-                      className="aspect-square w-full object-cover"
-                    />
-                  </a>
-                ) : (
-                  <div className="flex aspect-square w-full items-center justify-center bg-stone-100 text-xs text-stone-500">
-                    No preview
-                  </div>
-                )}
+                <GalleryThumb img={img} />
                 <div className="px-2 py-1.5">
                   <p className="truncate text-xs text-stone-700">{img.name}</p>
                   <p className="text-[11px] text-stone-500">
@@ -266,4 +253,127 @@ export function TrainingImageGallery({
       </div>
     </div>
   );
+}
+
+function isHeic(name: string): boolean {
+  const n = name.toLowerCase();
+  return n.endsWith(".heic") || n.endsWith(".heif");
+}
+
+// Converted HEIC previews, keyed by storage path, kept for the lifetime of the
+// page so switching sources/steps and scrolling back never re-decodes a file we
+// already converted. (A full reload still starts fresh — the permanent fix is to
+// convert the stored .heic files to .jpg so this path is never taken at all.)
+const heicCache = new Map<string, string>();
+
+// Decoding many HEICs at once starves heic2any's WASM decoder and the promises
+// hang, but strictly one-at-a-time is needlessly slow. A small fixed pool gives
+// real parallelism without the stall.
+const HEIC_CONCURRENCY = 3;
+let heicActive = 0;
+const heicQueue: Array<() => void> = [];
+function pumpHeic() {
+  while (heicActive < HEIC_CONCURRENCY && heicQueue.length > 0) {
+    const job = heicQueue.shift()!;
+    heicActive += 1;
+    job();
+  }
+}
+function runHeic<T>(task: () => Promise<T>): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    heicQueue.push(() => {
+      task()
+        .then(resolve, reject)
+        .finally(() => {
+          heicActive -= 1;
+          pumpHeic();
+        });
+    });
+    pumpHeic();
+  });
+}
+
+/**
+ * Renders a single gallery thumbnail. Most images load straight from their
+ * storage URL, but HEIC/HEIF files don't render in non-Safari browsers, so we
+ * fetch and convert them to JPEG (via heic2any, the same lib the uploader uses)
+ * and preview the converted blob instead.
+ */
+function GalleryThumb({ img }: { img: StoredImage }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const needsConvert = img.url != null && isHeic(img.name);
+  // Seed from the cache so an already-converted file renders instantly with no
+  // flash of the "Converting…" placeholder.
+  const [convertedUrl, setConvertedUrl] = useState<string | null>(() =>
+    needsConvert ? heicCache.get(img.path) ?? null : null,
+  );
+  const [status, setStatus] = useState<"idle" | "error">("idle");
+
+  useEffect(() => {
+    if (!needsConvert || !img.url || convertedUrl) return;
+    const el = ref.current;
+    if (!el) return;
+    let cancelled = false;
+
+    // Only spend a decode on thumbnails the user actually scrolls near.
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((e) => e.isIntersecting)) return;
+        observer.disconnect();
+        runHeic(async () => {
+          const res = await fetch(img.url as string);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const blob = await res.blob();
+          const heic2any = await import("heic2any").then((m) => m.default);
+          const result = await heic2any({ blob, toType: "image/jpeg", quality: 0.7 });
+          const out = Array.isArray(result) ? result[0] : result;
+          return URL.createObjectURL(out as Blob);
+        })
+          .then((url) => {
+            if (cancelled) {
+              URL.revokeObjectURL(url);
+              return;
+            }
+            heicCache.set(img.path, url);
+            setConvertedUrl(url);
+          })
+          .catch(() => {
+            if (!cancelled) setStatus("error");
+          });
+      },
+      { rootMargin: "300px" },
+    );
+    observer.observe(el);
+    return () => {
+      cancelled = true;
+      observer.disconnect();
+    };
+  }, [needsConvert, img.url, img.path, convertedUrl]);
+
+  let content: React.ReactNode;
+  if (!img.url) {
+    content = (
+      <div className="flex aspect-square w-full items-center justify-center bg-stone-100 text-xs text-stone-500">
+        No preview
+      </div>
+    );
+  } else if (needsConvert && !convertedUrl) {
+    content = (
+      <div className="flex aspect-square w-full items-center justify-center bg-stone-100 text-xs text-stone-500">
+        {status === "error" ? "HEIC preview failed" : "Converting HEIC…"}
+      </div>
+    );
+  } else {
+    // Link to the converted preview when we have one so clicking opens a
+    // viewable image rather than downloading the raw HEIC.
+    const src = convertedUrl ?? (img.url as string);
+    content = (
+      <a href={src} target="_blank" rel="noreferrer">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={src} alt={img.name} className="aspect-square w-full object-cover" />
+      </a>
+    );
+  }
+
+  return <div ref={ref}>{content}</div>;
 }

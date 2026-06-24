@@ -13,6 +13,44 @@ type StagedImage = {
 
 let stagedSeq = 0;
 
+async function convertHeicIfNeeded(file: File): Promise<File> {
+  const isHeic =
+    file.type === "image/heic" ||
+    file.type === "image/heif" ||
+    file.type === "image/heic-sequence" ||
+    file.type === "image/heif-sequence" ||
+    file.name.toLowerCase().endsWith(".heic") ||
+    file.name.toLowerCase().endsWith(".heif");
+
+  if (!isHeic) {
+    return file;
+  }
+
+  console.log("[HEIC] Detected HEIC file:", file.name, "type:", file.type);
+
+  try {
+    const heic2any = await import("heic2any").then((m) => m.default);
+    console.log("[HEIC] heic2any library loaded");
+
+    const result = await heic2any({
+      blob: file,
+      toType: "image/jpeg",
+      quality: 0.9,
+    });
+
+    console.log("[HEIC] Conversion successful, result type:", Array.isArray(result) ? "array" : typeof result);
+    const convertedBlob = Array.isArray(result) ? result[0] : result;
+    const newName = file.name.replace(/\.(heic|heif)$/i, ".jpg");
+    console.log("[HEIC] Converted to:", newName, "blob size:", convertedBlob.size);
+
+    return new File([convertedBlob], newName, { type: "image/jpeg" });
+  } catch (err) {
+    console.warn("[HEIC] Conversion failed:", err instanceof Error ? err.message : err);
+    console.warn("[HEIC] Falling back to original file:", file.name);
+    return file;
+  }
+}
+
 export function TrainingImageUploader() {
   const [activeStep, setActiveStep] = useState<TrainingStep>(TRAINING_STEPS[0]);
   const [submitterType, setSubmitterType] = useState<"school" | "individual">(
@@ -60,17 +98,42 @@ export function TrainingImageUploader() {
 
   function addFiles(list: FileList | null) {
     if (!list) return;
-    const incoming = Array.from(list)
-      .filter((f) => f.type.startsWith("image/"))
-      .map((file) => ({
-        id: `staged-${stagedSeq++}`,
-        file,
-        previewUrl: URL.createObjectURL(file),
-      }));
-    if (incoming.length === 0) return;
-    setStaged((prev) => [...prev, ...incoming]);
-    setThankYou(null);
-    setError(null);
+    // Include HEIC files even if they don't have proper MIME type
+    const files = Array.from(list).filter((f) => {
+      const isHeic = f.name.toLowerCase().endsWith(".heic") ||
+                     f.name.toLowerCase().endsWith(".heif");
+      const isImage = f.type.startsWith("image/");
+      return isImage || isHeic;
+    });
+    if (files.length === 0) return;
+
+    console.log("[Upload] Processing", files.length, "files");
+
+    // Convert HEIC files first, then create preview URLs
+    Promise.all(
+      files.map(async (file) => {
+        try {
+          const converted = await convertHeicIfNeeded(file);
+          return {
+            id: `staged-${stagedSeq++}`,
+            file: converted,
+            previewUrl: URL.createObjectURL(converted),
+          };
+        } catch (err) {
+          console.error("File conversion error:", err);
+          return {
+            id: `staged-${stagedSeq++}`,
+            file,
+            previewUrl: URL.createObjectURL(file),
+          };
+        }
+      })
+    ).then((incoming) => {
+      console.log("[Upload] Adding", incoming.length, "files to staged");
+      setStaged((prev) => [...prev, ...incoming]);
+      setThankYou(null);
+      setError(null);
+    });
   }
 
   function removeStaged(id: string) {
@@ -239,20 +302,36 @@ export function TrainingImageUploader() {
         <p className="mt-1 text-sm text-stone-500">
           JPEG, PNG, HEIC · up to 25 MB each · multiple at a time
         </p>
-        <label className="mt-4 inline-flex cursor-pointer rounded-full border border-stone-300 bg-white px-5 py-2.5 text-sm font-semibold text-stone-800 hover:border-amber-300 transition-colors aria-disabled:opacity-50">
-          Choose files
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            hidden
-            disabled={!configured}
-            onChange={(e) => {
-              addFiles(e.target.files);
-              e.target.value = "";
-            }}
-          />
-        </label>
+        <div className="mt-4 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <label className="inline-flex cursor-pointer rounded-full border border-stone-300 bg-white px-5 py-2.5 text-sm font-semibold text-stone-800 hover:border-amber-300 transition-colors aria-disabled:opacity-50">
+            Choose files
+            <input
+              type="file"
+              accept="image/*,.heic,.heif"
+              multiple
+              hidden
+              disabled={!configured}
+              onChange={(e) => {
+                addFiles(e.target.files);
+                e.target.value = "";
+              }}
+            />
+          </label>
+          <label className="inline-flex cursor-pointer rounded-full border border-stone-300 bg-white px-5 py-2.5 text-sm font-semibold text-stone-800 hover:border-amber-300 transition-colors aria-disabled:opacity-50 sm:hidden">
+            Take photo
+            <input
+              type="file"
+              accept="image/*,.heic,.heif"
+              capture="environment"
+              hidden
+              disabled={!configured}
+              onChange={(e) => {
+                addFiles(e.target.files);
+                e.target.value = "";
+              }}
+            />
+          </label>
+        </div>
       </div>
 
       {thankYou && (
@@ -307,7 +386,7 @@ export function TrainingImageUploader() {
                 <button
                   type="button"
                   onClick={() => removeStaged(s.id)}
-                  className="absolute right-1.5 top-1.5 rounded-full bg-stone-900/85 px-2 py-0.5 text-xs font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100"
+                  className="absolute right-1.5 top-1.5 rounded-full bg-stone-900/85 px-2 py-0.5 text-xs font-semibold text-white opacity-100 transition-opacity group-hover:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                 >
                   Remove
                 </button>
