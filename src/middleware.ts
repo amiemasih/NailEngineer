@@ -2,10 +2,6 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyJwtHs256 } from "@/lib/jwt-edge";
 
-// Set to false to bring the full site back.
-const PLACEHOLDER_MODE = true;
-const PLACEHOLDER_HTML = `<!doctype html><html><head><meta charset="utf-8"><title>i am nail tech</title></head><body>----i am nail tech ---</body></html>`;
-
 const COOKIE = "nailcraft_session";
 const TECH_COOKIE = "ne_tech_session";
 
@@ -42,17 +38,6 @@ function isPublicTechApi(pathname: string) {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
-  if (
-    PLACEHOLDER_MODE &&
-    !pathname.startsWith("/api/") &&
-    pathname !== "/about" &&
-    !pathname.startsWith("/about/")
-  ) {
-    return new NextResponse(PLACEHOLDER_HTML, {
-      headers: { "content-type": "text/html; charset=utf-8" },
-    });
-  }
 
   if (pathname.startsWith("/api/tech/")) {
     if (isPublicTechApi(pathname)) {
@@ -113,8 +98,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Every page (skips Next internals and files with an extension, e.g. favicon)
-    "/((?!_next/|.*\\..*).*)",
     "/dashboard/:path*",
     "/learn/:path*",
     "/tech",
